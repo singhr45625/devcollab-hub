@@ -1,0 +1,110 @@
+name: Production CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/devcollab-backend:latest
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/devcollab-frontend:latest
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 1. Build and Push Backend Image to GHCR
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.prod
+          push: true
+          tags: ${{ env.BACKEND_IMAGE }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 2. Build and Push Frontend Image to GHCR
+      # Uses VITE_API_URL as a build arg so the URL is baked into React static assets
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile.prod
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+          push: true
+          tags: ${{ env.FRONTEND_IMAGE }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Copy production files to the host
+      - name: Copy docker-compose and configs to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.prod.yml,nginx/nginx.conf"
+          target: "/home/ubuntu/app"
+
+      # Execute commands on EC2 to download updated containers and restart
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/app
+            
+            # Log in to GitHub Container Registry on the EC2 server
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+            
+            # Write secrets to production .env file
+            cat <<EOF > .env
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            SMTP_HOST=${{ secrets.SMTP_HOST }}
+            SMTP_PORT=${{ secrets.SMTP_PORT }}
+            SMTP_USER=${{ secrets.SMTP_USER }}
+            SMTP_PASS=${{ secrets.SMTP_PASS }}
+            EMAIL_FROM=${{ secrets.EMAIL_FROM }}
+            FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+            BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            DOCKER_IMAGE_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+            EOF
+            
+            # Pull new builds
+            docker compose -f docker-compose.prod.yml pull
+            
+            # Recreate containers
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            
+            # Clean up old unused images to save disk space
+            docker image prune -f
