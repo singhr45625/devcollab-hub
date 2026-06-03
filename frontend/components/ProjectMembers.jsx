@@ -128,11 +128,11 @@ function ProjectMembers({ projectId, token, userRole }) {
             <form onSubmit={sendInvite}>
               <div className="mb-4">
                 <label className="block text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
-                <input
+                 <input
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="colleague@company.com"
                   required
                 />
@@ -142,11 +142,11 @@ function ProjectMembers({ projectId, token, userRole }) {
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="member">Member (Can edit tasks)</option>
-                  <option value="admin">Admin (Can manage members)</option>
-                  <option value="viewer">Viewer (Read only)</option>
+                  <option value="member" className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">Member (Can edit tasks)</option>
+                  <option value="admin" className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">Admin (Can manage members)</option>
+                  <option value="viewer" className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">Viewer (Read only)</option>
                 </select>
               </div>
               <div className="flex justify-end gap-3">

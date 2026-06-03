@@ -13,4 +13,17 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// Get current logged-in user profile
+router.get('/me', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId, 'name email');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

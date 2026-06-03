@@ -39,7 +39,26 @@ function Dashboard({ token, setToken }) {
   useEffect(() => {
     fetchProjects();
     fetchAnalytics();
-  }, [fetchAnalytics]);
+
+    // Fetch user details if token exists but user info is missing in local storage/state (self-healing profile check)
+    if (!user && token) {
+      axios.get('/api/users/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => {
+        const userData = {
+          id: res.data._id,
+          name: res.data.name,
+          email: res.data.email
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+      })
+      .catch(err => {
+        console.error('Failed to fetch user profile:', err);
+      });
+    }
+  }, [fetchAnalytics, token, user]);
   
   useEffect(() => {
     const socketUrl = import.meta.env.VITE_API_URL || undefined;

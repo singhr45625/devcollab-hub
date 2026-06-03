@@ -25,6 +25,31 @@ function ProjectBoard({ token }) {
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [socket, setSocket] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  useEffect(() => {
+    if (!currentUser && token) {
+      axios.get('/api/users/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => {
+        const userData = {
+          id: res.data._id,
+          name: res.data.name,
+          email: res.data.email
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        setCurrentUser(userData);
+      })
+      .catch(err => {
+        console.error('Failed to fetch user profile:', err);
+      });
+    }
+  }, [currentUser, token]);
+
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showTaskDetails, setShowTaskDetails] = useState(null);
   const [newTask, setNewTask] = useState({ 
@@ -297,13 +322,22 @@ function ProjectBoard({ token }) {
                 <p className="text-slate-600 dark:text-slate-400 mt-1">{project?.description}</p>
               </div>
             </div>
-            <button
-              onClick={() => setShowTaskModal(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md"
-            >
-              <PlusIcon className="h-5 w-5" />
-              Add Task
-            </button>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto justify-end">
+              {currentUser && (
+                <div className="text-sm text-slate-600 dark:text-slate-400 bg-blue-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-slate-800 shadow-sm flex items-center gap-2">
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">👤 {currentUser.name}</span>
+                  <span className="text-slate-300 dark:text-slate-700">|</span>
+                  <span>{currentUser.email}</span>
+                </div>
+              )}
+              <button
+                onClick={() => setShowTaskModal(true)}
+                className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md w-full sm:w-auto justify-center"
+              >
+                <PlusIcon className="h-5 w-5" />
+                Add Task
+              </button>
+            </div>
           </div>
         </div>
       </div>
