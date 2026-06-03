@@ -65,7 +65,7 @@ app.use('/uploads', express.static('uploads'));
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // higher limit in development
+  max: process.env.NODE_ENV === 'production' ? 2000 : 5000, // higher limits to prevent lockout
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many requests from this IP, please try again later.',
