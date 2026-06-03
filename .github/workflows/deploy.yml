@@ -97,14 +97,13 @@ jobs:
             FRONTEND_URL=${{ secrets.FRONTEND_URL }}
             BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}
             VITE_API_URL=${{ secrets.VITE_API_URL }}
-            DOCKER_IMAGE_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
             EOF
             
             # Pull new builds
-            docker compose -f docker-compose.prod.yml pull
+            docker-compose -f docker-compose.prod.yml pull
             
             # Recreate containers
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker-compose -f docker-compose.prod.yml up -d --remove-orphans
             
             # Clean up old unused images to save disk space
             docker image prune -f

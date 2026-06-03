@@ -15,7 +15,7 @@ services:
         max-file: "3"
 
   backend:
-    image: ghcr.io/${DOCKER_IMAGE_OWNER}/devcollab-backend:latest
+    image: ghcr.io/singhr45625/devcollab-backend:latest
     container_name: devcollab-backend-prod
     restart: always
     environment:
@@ -40,7 +40,7 @@ services:
         max-file: "3"
 
   frontend:
-    image: ghcr.io/${DOCKER_IMAGE_OWNER}/devcollab-frontend:latest
+    image: ghcr.io/singhr45625/devcollab-frontend:latest
     container_name: devcollab-frontend-prod
     restart: always
     depends_on:
