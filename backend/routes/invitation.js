@@ -111,12 +111,20 @@ router.post('/project/:projectId/invite', auth, async (req, res) => {
     
     await project.save();
     
-    // Build the invitation URL using the configured frontend URL or request origin.
-    // In production, set FRONTEND_URL to your Vercel app so email links never point to localhost.
-    const frontendEnvUrl = process.env.FRONTEND_URL?.trim();
-    const frontendBase = (frontendEnvUrl && frontendEnvUrl !== 'http://localhost:3000'
-      ? frontendEnvUrl
-      : req.headers.origin || 'http://localhost:3000').replace(/\/$/, '');
+    // Build the invitation URL using the request origin or configured frontend URL.
+    // If the request comes from a production domain (like duckdns.org), prioritize it dynamically
+    // so we don't accidentally redirect to stale deployment endpoints like Vercel.
+    let frontendBase = '';
+    const origin = req.headers.origin;
+    if (origin && !origin.includes('localhost') && !origin.includes('127.0.0.1')) {
+      frontendBase = origin;
+    } else {
+      const frontendEnvUrl = process.env.FRONTEND_URL?.trim();
+      frontendBase = (frontendEnvUrl && frontendEnvUrl !== 'http://localhost:3000'
+        ? frontendEnvUrl
+        : origin || 'http://localhost:3000');
+    }
+    frontendBase = frontendBase.replace(/\/$/, '');
     const inviteUrl = `${frontendBase}/invite/${token}`;
     let emailQueued = false;
 
