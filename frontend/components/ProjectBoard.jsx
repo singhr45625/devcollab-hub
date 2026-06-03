@@ -446,7 +446,7 @@ function ProjectBoard({ token }) {
       {/* Create Task Modal */}
       {showTaskModal && (
         <div className="fixed inset-0 bg-slate-950/70 flex items-center justify-center z-50 px-4">
-          <div className="w-full max-w-lg overflow-hidden rounded-[36px] border border-slate-200/40 bg-white/95 dark:border-white/10 dark:bg-slate-950/95 p-8 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.18)] dark:shadow-[0_40px_120px_-60px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[36px] border border-slate-200/40 bg-white/95 dark:border-white/10 dark:bg-slate-950/95 p-8 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.18)] dark:shadow-[0_40px_120px_-60px_rgba(0,0,0,0.8)] backdrop-blur-xl">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-slate-950 dark:text-white">Create New Task</h2>
               <button onClick={() => setShowTaskModal(false)} className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition">
@@ -499,6 +499,9 @@ function ProjectBoard({ token }) {
                   showPopperArrow={false}
                   isClearable
                   minDate={new Date()}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="scroll"
                 />
               </div>
               <div className="mb-6">
@@ -535,7 +538,7 @@ function ProjectBoard({ token }) {
       {/* Task Details Modal */}
       {showTaskDetails && (
         <div className="fixed inset-0 bg-slate-950/70 flex items-center justify-center z-50 px-4">
-          <div className="w-full max-w-2xl overflow-hidden rounded-[36px] border border-slate-200/40 bg-white/95 dark:border-white/10 dark:bg-slate-950/95 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.18)] dark:shadow-[0_40px_120px_-60px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[36px] border border-slate-200/40 bg-white/95 dark:border-white/10 dark:bg-slate-950/95 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.18)] dark:shadow-[0_40px_120px_-60px_rgba(0,0,0,0.8)] backdrop-blur-xl">
             <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start">
               <div>
                 <h2 className="text-2xl font-bold text-slate-950 dark:text-white">{showTaskDetails.title}</h2>
