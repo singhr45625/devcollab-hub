@@ -21,6 +21,7 @@ function App() {
       axios.defaults.headers.common.Authorization = `Bearer ${token}`;
     } else {
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       delete axios.defaults.headers.common.Authorization;
     }
   }, [token]);

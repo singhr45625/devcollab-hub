@@ -12,6 +12,10 @@ import toast from 'react-hot-toast';
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 function Dashboard({ token, setToken }) {
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [ownedProjects, setOwnedProjects] = useState([]);
   const [sharedProjects, setSharedProjects] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -95,6 +99,7 @@ function Dashboard({ token, setToken }) {
   const logout = () => {
     setToken(null);
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     navigate('/login');
     toast.success('Logged out successfully');
   };
@@ -135,6 +140,13 @@ function Dashboard({ token, setToken }) {
               DevCollab Hub
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">Manage and collaborate on your workspaces</p>
+            {user && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-slate-800 w-fit shadow-sm">
+                <span className="font-semibold text-blue-600 dark:text-blue-400">👤 {user.name}</span>
+                <span className="text-gray-300 dark:text-gray-600">|</span>
+                <span>{user.email}</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <DarkModeToggle />
