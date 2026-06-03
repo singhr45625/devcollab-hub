@@ -16,6 +16,7 @@ import DatePicker from 'react-datepicker';
 import TeamChat from './TeamChat';
 import ActivityFeed from './ActivityFeed';
 import ProjectMembers from './ProjectMembers';
+import 'react-datepicker/dist/react-datepicker.css';
 import './react-datepicker.css';
 
 function ProjectBoard({ token }) {
@@ -501,7 +502,8 @@ function ProjectBoard({ token }) {
                   minDate={new Date()}
                   showMonthDropdown
                   showYearDropdown
-                  dropdownMode="scroll"
+                  dropdownMode="select"
+                  portalId="root"
                 />
               </div>
               <div className="mb-6">
