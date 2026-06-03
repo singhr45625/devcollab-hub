@@ -15,7 +15,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketio(server, {
     cors:{
-        origin: ['http://localhost:3000', 'https://dev-collab-app-brown.vercel.app'],
+        origin: ['http://localhost:3000', 'https://dev-collab-app-brown.vercel.app', 'https://devcollab.duckdns.org'],
         methods: ['GET', 'POST', "PUT", "DELETE", "PATCH"],
         credentials: true
     }
@@ -41,6 +41,7 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'https://dev-collab-app-brown.vercel.app',
   'https://devcollab-api-yuhm.onrender.com',
+  'https://devcollab.duckdns.org',
 ];
 const corsOptions = {
   origin: (origin, callback) => {

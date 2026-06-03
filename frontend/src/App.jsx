@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
 
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
 import Login from '../components/Login';
 import Register from '../components/Register';
 import Dashboard from '../components/Dashboard';
