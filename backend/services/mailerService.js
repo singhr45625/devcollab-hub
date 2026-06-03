@@ -1,17 +1,28 @@
 const nodemailer = require('nodemailer');
 
-const smtpEnabled = Boolean(
-  process.env.BREVO_API_KEY ||
-  process.env.RESEND_API_KEY || (
-    process.env.SMTP_HOST &&
-    process.env.SMTP_PORT &&
-    process.env.SMTP_USER &&
-    process.env.SMTP_PASS
-  )
+const smtpConfigured = Boolean(
+  process.env.SMTP_HOST &&
+  process.env.SMTP_PORT &&
+  process.env.SMTP_USER &&
+  process.env.SMTP_PASS
 );
 
+function isDummyKey(key) {
+  if (!key) return true;
+  const k = key.toLowerCase();
+  return k.includes('test') || k.includes('placeholder') || k.includes('dummy') || k.startsWith('your_') || k.startsWith('your-') || key.length < 10;
+}
+
+const brevoKey = process.env.BREVO_API_KEY;
+const useBrevo = brevoKey && !isDummyKey(brevoKey);
+
+const resendKey = process.env.RESEND_API_KEY;
+const useResend = resendKey && !isDummyKey(resendKey);
+
+const smtpEnabled = Boolean(useBrevo || useResend || smtpConfigured);
+
 let transporter = null;
-if (!process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY && smtpEnabled) {
+if (smtpConfigured) {
   transporter = nodemailer.createTransport({
     service: process.env.SMTP_SERVICE || undefined,
     host: process.env.SMTP_HOST,
@@ -49,14 +60,14 @@ async function sendMail({ to, subject, text, html }) {
   const senderName = match ? match[1].replace(/"/g, '').trim() : 'DevCollab Hub';
   const senderEmail = match ? match[2].trim() : (process.env.SMTP_USER || 'kpuja0969@gmail.com');
 
-  // 1. Use Brevo HTTP API if BREVO_API_KEY is configured (Bypasses SMTP port blocks and SMTP relay IP authorization)
-  if (process.env.BREVO_API_KEY) {
+  // 1. Use Brevo HTTP API if BREVO_API_KEY is configured
+  if (useBrevo) {
     try {
       const response = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
           'accept': 'application/json',
-          'api-key': process.env.BREVO_API_KEY,
+          'api-key': brevoKey,
           'content-type': 'application/json'
         },
         body: JSON.stringify({
@@ -75,18 +86,21 @@ async function sendMail({ to, subject, text, html }) {
       return { messageId: data.messageId };
     } catch (err) {
       console.error(`✗ Email send failed via Brevo HTTP API for ${to}:`, err.message || err);
-      throw err;
+      if (!transporter) {
+        throw err;
+      }
+      console.log('Attempting fallback to SMTP transporter...');
     }
   }
 
-  // 2. Use Resend HTTP API if RESEND_API_KEY is configured (Safe for Render, bypasses SMTP blocks)
-  if (process.env.RESEND_API_KEY) {
+  // 2. Use Resend HTTP API if RESEND_API_KEY is configured
+  if (useResend) {
     const from = process.env.RESEND_FROM || 'onboarding@resend.dev';
     try {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Authorization': `Bearer ${resendKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -105,11 +119,14 @@ async function sendMail({ to, subject, text, html }) {
       return { messageId: data.id };
     } catch (err) {
       console.error(`✗ Email send failed via Resend for ${to}:`, err.message || err);
-      throw err;
+      if (!transporter) {
+        throw err;
+      }
+      console.log('Attempting fallback to SMTP transporter...');
     }
   }
 
-  // 3. Fallback to Nodemailer SMTP (Works for local development)
+  // 3. Fallback to Nodemailer SMTP (Gmail SMTP)
   if (!transporter) {
     throw new Error('SMTP transporter is not initialized.');
   }
