@@ -4,7 +4,16 @@ import io from 'socket.io-client';
 import { PaperAirplaneIcon, PhotoIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { formatDistanceToNow } from 'date-fns';
 
-function TeamChat({ projectId, token, currentUser }) {
+function TeamChat({ 
+  projectId, 
+  token, 
+  currentUser,
+  activeCall = null,
+  userRole = 'none',
+  onJoinCall = null,
+  onStartCall = null,
+  isInCall = false
+}) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [onlineUsers, setOnlineUsers] = useState([]);
@@ -229,15 +238,44 @@ function TeamChat({ projectId, token, currentUser }) {
       
       {/* Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Chat Area Header (Mobile Only Toggle Button) */}
+        {/* Chat Area Header (Mobile Only Toggle Button + Call Actions) */}
         <div className="p-3 border-b dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 md:bg-white md:dark:bg-gray-800">
-          <span className="font-semibold text-gray-800 dark:text-white text-sm md:text-base">Team Chat</span>
-          <button
-            onClick={() => setShowOnlineList(true)}
-            className="md:hidden text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-full font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/50 transition"
-          >
-            👥 Online ({onlineUsers.length})
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-gray-800 dark:text-white text-sm md:text-base">Team Chat</span>
+            {activeCall && (
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {activeCall ? (
+              !isInCall && (
+                <button
+                  onClick={onJoinCall}
+                  className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-full font-semibold transition flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>📞</span> Join Call
+                </button>
+              )
+            ) : (
+              (userRole === 'owner' || userRole === 'admin') && (
+                <button
+                  onClick={onStartCall}
+                  className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-full font-semibold transition flex items-center gap-1.5 shadow-sm border border-slate-700"
+                >
+                  <span>🎥</span> Start Call
+                </button>
+              )
+            )}
+            <button
+              onClick={() => setShowOnlineList(true)}
+              className="md:hidden text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-full font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/50 transition"
+            >
+              👥 Online ({onlineUsers.length})
+            </button>
+          </div>
         </div>
 
         {/* Messages */}

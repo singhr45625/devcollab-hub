@@ -16,6 +16,7 @@ import DatePicker from 'react-datepicker';
 import TeamChat from './TeamChat';
 import ActivityFeed from './ActivityFeed';
 import ProjectMembers from './ProjectMembers';
+import VideoCall from './VideoCall';
 import 'react-datepicker/dist/react-datepicker.css';
 import './react-datepicker.css';
 
@@ -25,6 +26,7 @@ function ProjectBoard({ token }) {
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [socket, setSocket] = useState(null);
+  const [isInCall, setIsInCall] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
@@ -109,9 +111,48 @@ function ProjectBoard({ token }) {
       toast.info('A member left the project');
       fetchProject();
     });
+    newSocket.on('call-started', (data) => {
+      if (data.projectId === id) {
+        toast.success('📞 A project video call has started!');
+        setProject(prev => prev ? { ...prev, activeCall: data.activeCall } : null);
+      }
+    });
+    newSocket.on('call-ended', (data) => {
+      if (data.projectId === id) {
+        toast.info('The video call has ended.');
+        setProject(prev => prev ? { ...prev, activeCall: null } : null);
+        setIsInCall(false);
+      }
+    });
 
     return () => newSocket.disconnect();
   }, [id]);
+
+  const handleStartCall = async () => {
+    try {
+      const res = await axios.post(`/api/projects/${id}/call/start`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProject(prev => prev ? { ...prev, activeCall: res.data } : null);
+      setIsInCall(true);
+      toast.success('Starting video call...');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to start video call');
+    }
+  };
+
+  const handleEndCall = async () => {
+    try {
+      await axios.post(`/api/projects/${id}/call/end`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProject(prev => prev ? { ...prev, activeCall: null } : null);
+      setIsInCall(false);
+      toast.success('Video call ended');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to end video call');
+    }
+  };
 
   const fetchProject = async () => {
     try {
@@ -330,9 +371,38 @@ function ProjectBoard({ token }) {
                   <span>{currentUser.email}</span>
                 </div>
               )}
+              {project?.activeCall ? (
+                isInCall ? (
+                  <button
+                    disabled
+                    className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-5 py-2.5 rounded-xl border border-blue-200/50 w-full sm:w-auto justify-center font-medium opacity-80 cursor-default"
+                  >
+                    <span>🟢</span>
+                    In Call
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setIsInCall(true)}
+                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl transition-all shadow-md w-full sm:w-auto justify-center font-semibold animate-pulse"
+                  >
+                    <span>📞</span>
+                    Join Call
+                  </button>
+                )
+              ) : (
+                (project?.userRole === 'owner' || project?.userRole === 'admin') && (
+                  <button
+                    onClick={handleStartCall}
+                    className="flex items-center gap-2 bg-slate-800 dark:bg-slate-800/80 text-white border border-slate-700 hover:bg-slate-700 dark:hover:bg-slate-700/80 px-5 py-2.5 rounded-xl transition-all shadow-md w-full sm:w-auto justify-center font-semibold"
+                  >
+                    <span>🎥</span>
+                    Start Call
+                  </button>
+                )
+              )}
               <button
                 onClick={() => setShowTaskModal(true)}
-                className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md w-full sm:w-auto justify-center"
+                className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md w-full sm:w-auto justify-center font-semibold"
               >
                 <PlusIcon className="h-5 w-5" />
                 Add Task
@@ -343,6 +413,26 @@ function ProjectBoard({ token }) {
       </div>
   
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {project?.activeCall && !isInCall && (
+          <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-950 dark:text-emerald-100 shadow-[0_10px_30px_-15px_rgba(16,185,129,0.3)]">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              <div>
+                <p className="font-semibold text-sm sm:text-base">Ongoing Group Video Call</p>
+                <p className="text-xs opacity-85">Started by project admin. Click join to enter.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsInCall(true)}
+              className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5"
+            >
+              <span>📞</span> Join Ongoing Call
+            </button>
+          </div>
+        )}
         <div className="mb-6 border-b dark:border-gray-700">
           <div className="flex gap-2 sm:gap-4 overflow-x-auto whitespace-nowrap scrollbar-thin pb-1">
             <button
@@ -465,7 +555,16 @@ function ProjectBoard({ token }) {
 
       {activeTab === 'chat' && (
         <div className="h-[600px]">
-          <TeamChat projectId={id} token={token} currentUser={currentUserId} />
+          <TeamChat 
+            projectId={id} 
+            token={token} 
+            currentUser={currentUserId}
+            activeCall={project?.activeCall}
+            userRole={project?.userRole}
+            onJoinCall={() => setIsInCall(true)}
+            onStartCall={handleStartCall}
+            isInCall={isInCall}
+          />
         </div>
       )}
 
@@ -658,6 +757,15 @@ function ProjectBoard({ token }) {
             </div>
           </div>
         </div>
+      )}
+      {isInCall && project?.activeCall && (
+        <VideoCall
+          roomName={project.activeCall.roomName}
+          currentUser={currentUser}
+          isAdmin={project.userRole === 'owner' || project.userRole === 'admin'}
+          onLeave={() => setIsInCall(false)}
+          onEndCall={handleEndCall}
+        />
       )}
     </div>
   );
