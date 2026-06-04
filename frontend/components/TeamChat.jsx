@@ -12,6 +12,7 @@ function TeamChat({
   userRole = 'none',
   onJoinCall = null,
   onStartCall = null,
+  onEndCall = null,
   isInCall = false
 }) {
   const [messages, setMessages] = useState([]);
@@ -252,12 +253,22 @@ function TeamChat({
           <div className="flex items-center gap-2">
             {activeCall ? (
               !isInCall && (
-                <button
-                  onClick={onJoinCall}
-                  className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-full font-semibold transition flex items-center gap-1.5 shadow-sm"
-                >
-                  <span>📞</span> Join Call
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onJoinCall}
+                    className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-full font-semibold transition flex items-center gap-1.5 shadow-sm"
+                  >
+                    <span>📞</span> Join Call
+                  </button>
+                  {(userRole === 'owner' || userRole === 'admin') && onEndCall && (
+                    <button
+                      onClick={onEndCall}
+                      className="text-xs bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-full font-semibold transition flex items-center gap-1.5 shadow-sm"
+                    >
+                      <span>⏹️</span> End Call
+                    </button>
+                  )}
+                </div>
               )
             ) : (
               (userRole === 'owner' || userRole === 'admin') && (

@@ -381,13 +381,24 @@ function ProjectBoard({ token }) {
                     In Call
                   </button>
                 ) : (
-                  <button
-                    onClick={() => setIsInCall(true)}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl transition-all shadow-md w-full sm:w-auto justify-center font-semibold animate-pulse"
-                  >
-                    <span>📞</span>
-                    Join Call
-                  </button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => setIsInCall(true)}
+                      className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl transition-all shadow-md w-full sm:w-auto justify-center font-semibold animate-pulse"
+                    >
+                      <span>📞</span>
+                      Join Call
+                    </button>
+                    {(project?.userRole === 'owner' || project?.userRole === 'admin') && (
+                      <button
+                        onClick={handleEndCall}
+                        className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl transition-all shadow-md w-full sm:w-auto justify-center font-semibold"
+                      >
+                        <span>⏹️</span>
+                        End Call
+                      </button>
+                    )}
+                  </div>
                 )
               ) : (
                 (project?.userRole === 'owner' || project?.userRole === 'admin') && (
@@ -425,12 +436,22 @@ function ProjectBoard({ token }) {
                 <p className="text-xs opacity-85">Started by project admin. Click join to enter.</p>
               </div>
             </div>
-            <button
-              onClick={() => setIsInCall(true)}
-              className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5"
-            >
-              <span>📞</span> Join Ongoing Call
-            </button>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={() => setIsInCall(true)}
+                className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5"
+              >
+                <span>📞</span> Join Ongoing Call
+              </button>
+              {(project?.userRole === 'owner' || project?.userRole === 'admin') && (
+                <button
+                  onClick={handleEndCall}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-sm transition shadow-md shadow-rose-600/20 flex items-center justify-center gap-1.5"
+                >
+                  <span>⏹️</span> End Call
+                </button>
+              )}
+            </div>
           </div>
         )}
         <div className="mb-6 border-b dark:border-gray-700">
@@ -563,6 +584,7 @@ function ProjectBoard({ token }) {
             userRole={project?.userRole}
             onJoinCall={() => setIsInCall(true)}
             onStartCall={handleStartCall}
+            onEndCall={handleEndCall}
             isInCall={isInCall}
           />
         </div>

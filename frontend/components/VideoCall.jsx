@@ -56,11 +56,11 @@ function VideoCall({ roomName, currentUser, onLeave, isAdmin, onEndCall }) {
 
         // Listen for Jitsi events
         api.addEventListener('readyToClose', () => {
-          handleLeave();
+          handleLeave(true);
         });
 
         api.addEventListener('videoConferenceLeft', () => {
-          handleLeave();
+          handleLeave(true);
         });
       } catch (err) {
         console.error('Error creating Jitsi Meet API:', err);
@@ -95,10 +95,19 @@ function VideoCall({ roomName, currentUser, onLeave, isAdmin, onEndCall }) {
     };
   }, [roomName]);
 
-  const handleLeave = () => {
+  const handleLeave = async (fromJitsiHangup = false) => {
     if (apiRef.current) {
       apiRef.current.dispose();
       apiRef.current = null;
+    }
+    if (fromJitsiHangup && isAdmin && onEndCall) {
+      if (window.confirm('You are leaving the call. Do you want to end this video call for everyone in the project?')) {
+        try {
+          await onEndCall();
+        } catch (err) {
+          console.error('Failed to end call on hangup:', err);
+        }
+      }
     }
     onLeave();
   };
