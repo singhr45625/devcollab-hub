@@ -371,7 +371,7 @@ function ProjectBoard({ token }) {
                   <span>{currentUser.email}</span>
                 </div>
               )}
-              {project?.activeCall ? (
+              {project?.activeCall?.roomName ? (
                 isInCall ? (
                   <button
                     disabled
@@ -424,7 +424,7 @@ function ProjectBoard({ token }) {
       </div>
   
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {project?.activeCall && !isInCall && (
+        {project?.activeCall?.roomName && !isInCall && (
           <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-950 dark:text-emerald-100 shadow-[0_10px_30px_-15px_rgba(16,185,129,0.3)]">
             <div className="flex items-center gap-3">
               <span className="relative flex h-3 w-3">
@@ -780,7 +780,7 @@ function ProjectBoard({ token }) {
           </div>
         </div>
       )}
-      {isInCall && project?.activeCall && (
+      {isInCall && project?.activeCall?.roomName && (
         <VideoCall
           roomName={project.activeCall.roomName}
           currentUser={currentUser}
